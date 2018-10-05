@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+
+   WSO2 Inc. licenses this file to you under the Apache License,
+   Version 2.0 (the "License"); you may not use this file except
+   in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing,
+   software distributed under the License is distributed on an
+   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+   KIND, either express or implied. See the License for the
+   specific language governing permissions and limitations
+   under the License.
+-->
+<template name="instaFlightsSearch" xmlns="http://ws.apache.org/ns/synapse">
+	<parameter name="origin" description="3-letter IATA airport code or city code of the departure airport."/>
+	<parameter name="destination" description="3-letter IATA airport code or city code of the arrival airport."/>
+	<parameter name="departuredate" description="Format: YYYY-MM-DD."/>
+	<parameter name="returndate" description="Format: YYYY-MM-DD."/>
+	<parameter name="includedcarriers" description="List of IATA airline codes."/>
+	<parameter name="excludedcarriers" description="List of IATA airline codes. Format: XX,YY,ZZ."/>
+	<parameter name="outboundflightstops" description="Max number of flight connections. Values 0-99."/>
+	<parameter name="includedconnectpoints" description="List of 3 letter IATA airport codes. Format: XXX,YYY,ZZZ. Max 3 airport codes allowed."/>
+	<parameter name="excludedconnectpoints" description="List of 3 letter IATA airport codes. Format: XXX,YYY,ZZZ. Max 3 airport codes allowed."/>
+	<parameter name="inboundflightstops" description="Max number of flight connections. Values 0-99."/>
+	<parameter name="outboundstopduration" description="The sum of the total waiting time for all connections on an outbound itinerary. Values 0-9999."/>
+	<parameter name="inboundstopduration" description="The sum of the total waiting time for all connections on an inbound itinerary. Values 0-9999."/>
+	<parameter name="outbounddeparturewindow" description="Time range during which a first outbound flight segment can depart on the departure date. Format: HHMMHHMM."/>
+	<parameter name="inbounddeparturewindow	" description="Time range during which a first inbound flight segment can depart on the departure date. Format: HHMMHHMM."/>
+	<parameter name="outboundarrivalwindow" description="Time range during which a last outbound flight segment can arrive, after the departure date. Format: HHMMHHMM."/>
+	<parameter name="inboundarrivalwindow" description="Time range during which a last inbound flight segment can arrive on the return date. Format: HHMMHHMM."/>
+	<parameter name="onlineitinerariesonly" description="An indicator to base the response on online or interline itineraries."/>
+	<parameter name="minfare" description="Minimum overall lead fare."/>
+	<parameter name="maxfare" description="Maximum overall lead fare."/>
+	<parameter name="limit" description="Limit the number of itineraries returned."/>
+	<parameter name="offset" description="Retrieves the itineraries that start with the number in offset through the quantity in limit, inclusive."/>
+	<parameter name="eticketsonly" description="An indicator to only retrieve itineraries that are e-ticket eligible."/>
+	<parameter name="sortby" description="Primary sort object in the response."/>
+	<parameter name="order" description="Sorting order for the primary sortby."/>
+	<parameter name="sortby2" description="Secondary sort object in the response."/>
+	<parameter name="order2" description="Sorting order for sortby2."/>
+	<parameter name="pointofsalecountry" description="2-letter country code of the point of sale."/>
+	<parameter name="passengercount" description="Valid values: 1 to 10, inclusive."/>
+	<parameter name="view" description="A Sabre response view definition."/>
+	<sequence>
+		<property name="uri.var.origin" expression="$func:origin" />
+		<property name="uri.var.destination" expression="$func:destination" />
+		<property name="uri.var.departuredate" expression="$func:departuredate" />
+		<property name="uri.var.returndate" expression="$func:returndate" />
+		<property name="includedcarriers" expression="$func:includedcarriers" />
+		<property name="excludedcarriers" expression="$func:excludedcarriers" />
+		<property name="outboundflightstops" expression="$func:outboundflightstops" />
+		<property name="includedconnectpoints" expression="$func:includedconnectpoints" />
+		<property name="excludedconnectpoints" expression="$func:excludedconnectpoints" />
+		<property name="inboundflightstops" expression="$func:inboundflightstops" />
+		<property name="outboundstopduration" expression="$func:outboundstopduration" />
+		<property name="inboundstopduration" expression="$func:inboundstopduration" />
+		<property name="outbounddeparturewindow" expression="$func:outbounddeparturewindow" />
+		<property name="inbounddeparturewindow" expression="$func:inbounddeparturewindow" />
+		<property name="outboundarrivalwindow" expression="$func:outboundarrivalwindow" />
+		<property name="inboundarrivalwindow" expression="$func:inboundarrivalwindow" />
+		<property name="onlineitinerariesonly	" expression="$func:onlineitinerariesonly	" />
+		<property name="minfare" expression="$func:minfare" />
+		<property name="maxfare" expression="$func:maxfare" />
+		<property name="limit" expression="$func:limit" />
+		<property name="offset" expression="$func:offset" />
+		<property name="eticketsonly" expression="$func:eticketsonly" />
+		<property name="sortby" expression="$func:sortby" />
+		<property name="order" expression="$func:order" />
+		<property name="sortby2" expression="$func:sortby2" />
+		<property name="order2" expression="$func:order2" />
+		<property name="pointofsalecountry" expression="$func:pointofsalecountry" />
+		<property name="passengercount" expression="$func:passengercount" />
+		<property name="view" expression="$func:view" />
+		
+		<script language="js">
+		<![CDATA[     
+		 
+		  var includedcarriers = mc.getProperty("includedcarriers");
+		  var excludedcarriers = mc.getProperty("excludedcarriers");
+		  var outboundflightstops = mc.getProperty("outboundflightstops");
+		  var includedconnectpoints = mc.getProperty("includedconnectpoints");
+		  var excludedconnectpoints = mc.getProperty("excludedconnectpoints");
+		  var inboundflightstops = mc.getProperty("inboundflightstops");
+		  var outboundstopduration = mc.getProperty("outboundstopduration");
+		  var inboundstopduration = mc.getProperty("inboundstopduration");
+		  var outbounddeparturewindow = mc.getProperty("outbounddeparturewindow");
+		  var inbounddeparturewindow = mc.getProperty("inbounddeparturewindow");
+		  var outboundarrivalwindow = mc.getProperty("outboundarrivalwindow");
+		  var inboundarrivalwindow = mc.getProperty("inboundarrivalwindow");
+		  var onlineitinerariesonly = mc.getProperty("onlineitinerariesonly");
+		  var minfare = mc.getProperty("minfare");
+		  var maxfare = mc.getProperty("maxfare");
+		  var limit = mc.getProperty("limit");
+		  var offset = mc.getProperty("offset");
+		  var eticketsonly = mc.getProperty("eticketsonly");
+		  var sortby = mc.getProperty("sortby");
+		  var order = mc.getProperty("order");
+		  var sortby2 = mc.getProperty("sortby2");
+		  var order2 = mc.getProperty("order2");
+		  var pointofsalecountry = mc.getProperty("pointofsalecountry");
+		  var passengercount = mc.getProperty("passengercount");
+		  var view = mc.getProperty("view");
+		  var urlQuery = '';
+		
+		if (includedcarriers != null && includedcarriers != "") {
+		urlQuery += '&' + 'includedcarriers=' + includedcarriers;
+		} 
+		if (excludedcarriers != null && excludedcarriers != "") {
+		urlQuery += '&' + 'excludedcarriers=' + excludedcarriers;
+		} 
+		if (outboundflightstops != null && outboundflightstops != "") {
+		urlQuery += '&' + 'outboundflightstops=' + outboundflightstops;
+		} 
+		if (includedconnectpoints != null && includedconnectpoints != "") {
+		urlQuery += '&' + 'includedconnectpoints=' + includedconnectpoints;
+		} 
+		if (excludedconnectpoints != null && excludedconnectpoints != "") {
+		urlQuery += '&' + 'excludedconnectpoints=' + excludedconnectpoints;
+		}
+		if (inboundflightstops != null && inboundflightstops != "") {
+		urlQuery += '&' + 'inboundflightstops=' + inboundflightstops;
+		}
+		if (outboundstopduration != null && outboundstopduration != "") {
+		urlQuery += '&' + 'outboundstopduration=' + outboundstopduration;
+		}
+		if (inboundstopduration != null && inboundstopduration != "") {
+		urlQuery += '&' + 'inboundstopduration=' + inboundstopduration;
+		}
+		if (inbounddeparturewindow != null && inbounddeparturewindow != "") {
+		urlQuery += '&' + 'inbounddeparturewindow=' + inbounddeparturewindow;
+		}
+		if (outboundarrivalwindow != null && outboundarrivalwindow != "") {
+		urlQuery += '&' + 'outboundarrivalwindow=' + outboundarrivalwindow;
+		}
+		if (inboundarrivalwindow != null && inboundarrivalwindow != "") {
+		urlQuery += '&' + 'inboundarrivalwindow=' + inboundarrivalwindow;
+		}
+		if (onlineitinerariesonly != null && onlineitinerariesonly != "") {
+		urlQuery += '&' + 'onlineitinerariesonly=' + onlineitinerariesonly;
+		}
+		if (minfare != null && minfare != "") {
+		urlQuery += '&' + 'minfare=' + minfare;
+		}
+		if (maxfare != null && maxfare != "") {
+		urlQuery += '&' + 'maxfare=' + maxfare;
+		}
+		if (limit != null && limit != "") {
+		urlQuery+='&'+'limit='+limit;
+		}
+		if (offset != null && offset != "") {
+		urlQuery += '&' + 'offset=' + offset;
+		}
+		if (eticketsonly != null && eticketsonly != "") {
+		urlQuery += '&' + 'eticketsonly=' + eticketsonly;
+		}
+		if (sortby != null && sortby != "") {
+		urlQuery += '&' + 'sortby=' + sortby;
+		}
+		if (order != null && order != "") {
+		urlQuery += '&' + 'order=' + order;
+		}
+		if (sortby2 != null && sortby2 != "") {
+		urlQuery += '&' + 'sortby2=' + sortby2;
+		}
+		if (order2 != null && order2 != "") {
+		urlQuery += '&' + 'order2=' + order2;
+		}
+		if (pointofsalecountry != null && pointofsalecountry != "") {
+		urlQuery += '&' + 'pointofsalecountry=' + pointofsalecountry;
+		}
+		if (passengercount != null && passengercount != "") {
+		urlQuery += '&' + 'passengercount=' + passengercount;
+		}
+		if (view != null && view != "") {
+		urlQuery += '&' + 'view=' + view ;
+		}
+		if (urlQuery != null && urlQuery != ""){
+		urlQuery = '' + urlQuery.toString();
+		}
+		mc.setProperty('uri.var.urlQuery',urlQuery); 
+		]]>
+		</script>
+			<call>
+				<endpoint>
+					<http method="get"
+						  uri-template="{uri.var.apiUrl}/{uri.var.apiVersion}/shop/flights?origin={uri.var.origin}&amp;destination={uri.var.destination}&amp;departuredate={uri.var.departuredate}&amp;returndate={uri.var.returndate}{+uri.var.urlQuery}"/>
+				</endpoint>
+			</call>
+			
+	<header name="origin" scope="transport" action="remove"/>
+	<header name="destination" scope="transport" action="remove"/>
+	<header name="departuredate" scope="transport" action="remove"/>
+	<header name="returndate" scope="transport" action="remove"/>
+	<header name="includedcarriers" scope="transport" action="remove"/>
+	<header name="excludedcarriers" scope="transport" action="remove"/>
+	<header name="outboundflightstops" scope="transport" action="remove"/>
+	<header name="includedconnectpoints" scope="transport" action="remove"/>
+	<header name="excludedconnectpoints" scope="transport" action="remove"/>
+	<header name="inboundflightstops" scope="transport" action="remove"/>
+	<header name="outboundstopduration" scope="transport" action="remove"/>
+	<header name="inboundstopduration" scope="transport" action="remove"/>
+	<header name="outbounddeparturewindow" scope="transport" action="remove"/>
+	<header name="inbounddeparturewindow" scope="transport" action="remove"/>
+	<header name="outboundarrivalwindow" scope="transport" action="remove"/>
+	<header name="inboundarrivalwindow" scope="transport" action="remove"/>
+	<header name="onlineitinerariesonly" scope="transport" action="remove"/>
+	<header name="minfare" scope="transport" action="remove"/>
+	<header name="maxfare" scope="transport" action="remove"/>
+	<header name="limit" scope="transport" action="remove"/>
+	<header name="offset" scope="transport" action="remove"/>
+	<header name="eticketsonly" scope="transport" action="remove"/>
+	<header name="sortby" scope="transport" action="remove"/>
+	<header name="order" scope="transport" action="remove"/>
+	<header name="sortby2" scope="transport" action="remove"/>
+	<header name="order2" scope="transport" action="remove"/>
+	<header name="pointofsalecountry" scope="transport" action="remove"/>
+	<header name="passengercount" scope="transport" action="remove"/>
+	<header name="view" scope="transport" action="remove"/>
+	<header name="proxy-client-data" scope="transport" action="remove"/>
+	<header name="EnvType" scope="transport" action="remove"/>
+	<header name="Transfer-encoding" scope="transport" action="remove"/>
+	</sequence>
+</template>

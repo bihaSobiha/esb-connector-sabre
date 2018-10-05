@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+
+   WSO2 Inc. licenses this file to you under the Apache License,
+   Version 2.0 (the "License"); you may not use this file except
+   in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing,
+   software distributed under the License is distributed on an
+   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+   KIND, either express or implied. See the License for the
+   specific language governing permissions and limitations
+   under the License.
+-->
+<template name="fareRange" xmlns="http://ws.apache.org/ns/synapse">
+	<parameter name="origin" description="3-letter IATA airport code or city code of the departure airport."/>
+	<parameter name="destination" description="3-letter IATA airport code or city code of the arrival airport."/>
+	<parameter name="earliestdeparturedate" description="Format: YYYY-MM-DD. The earliest date of departure in the range. The date can be a maximum of 90 days in the future, including the day of the request."/>
+	<parameter name="latestdeparturedate" description="Format: YYYY-MM-DD. The latest date of departure in the range. The date can be a maximum of 90 days in the future, including the day of the request."/>
+	<parameter name="lengthofstay" description="Valid values: 0 to 16, inclusive."/>
+	<parameter name="excludelcc" description="Limits the response to exclude low cost carriers (LCCs)."/>
+	
+	<sequence>
+		<property name="uri.var.origin" expression="$func:origin" />
+		<property name="uri.var.destination" expression="$func:destination" />
+		<property name="uri.var.earliestdeparturedate" expression="$func:earliestdeparturedate" />
+		<property name="uri.var.latestdeparturedate" expression="$func:latestdeparturedate" />
+		<property name="uri.var.lengthofstay" expression="$func:lengthofstay" />
+		<property name="excludelcc" expression="$func:excludelcc" />
+		
+		<script language="js">
+		<![CDATA[     
+		 
+		  var excludelcc = mc.getProperty("excludelcc");
+		  var urlQuery = '';
+		
+		if (excludelcc != null && excludelcc != "") {
+		urlQuery += '&' + 'excludelcc=' + excludelcc;
+		} 
+		if (urlQuery != null && urlQuery != ""){
+		urlQuery = '' + urlQuery.toString();
+		}
+		mc.setProperty('uri.var.urlQuery',urlQuery); 
+		]]>
+		</script>
+			<call>
+				<endpoint>
+					<http method="get"
+						  uri-template="{uri.var.apiUrl}/{uri.var.apiVersion}/historical/flights/fares?origin={uri.var.origin}&amp;destination={uri.var.destination}&amp;earliestdeparturedate={uri.var.earliestdeparturedate}&amp;latestdeparturedate={uri.var.latestdeparturedate}&amp;lengthofstay={uri.var.lengthofstay}{+uri.var.urlQuery}"/>
+				</endpoint>
+			</call>
+			
+	<header name="origin" scope="transport" action="remove"/>
+	<header name="destination" scope="transport" action="remove"/>
+	<header name="latestdeparturedate" scope="transport" action="remove"/>
+	<header name="earliestdeparturedate" scope="transport" action="remove"/>
+	<header name="lengthofstay" scope="transport" action="remove"/>
+	<header name="proxy-client-data" scope="transport" action="remove"/>
+	<header name="EnvType" scope="transport" action="remove"/>
+	<header name="Transfer-encoding" scope="transport" action="remove"/>
+	</sequence>
+</template>

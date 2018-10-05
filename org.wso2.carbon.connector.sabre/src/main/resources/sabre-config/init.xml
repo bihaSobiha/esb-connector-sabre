@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+
+   WSO2 Inc. licenses this file to you under the Apache License,
+   Version 2.0 (the "License"); you may not use this file except
+   in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing,
+   software distributed under the License is distributed on an
+   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+   KIND, either express or implied. See the License for the
+   specific language governing permissions and limitations
+   under the License.
+-->
+<template name="init" onError="fault" xmlns="http://ws.apache.org/ns/synapse">
+   <parameter name="accessToken"
+          description="Value of the Access Token to access the api via request"/> 
+   <parameter name="clientId"
+          description="Client_id of your App, given by sabre when you registered your application"/>
+   <parameter name="clientSecret"
+          description="Client Secret of your App, given by sabre when you registered your application"/>
+   <parameter name="apiUrl"
+      description="base url of the user used to log in to sabre." />
+    <parameter name="apiVersion"
+        description="version of sabre." />
+   <sequence>
+      <property name="uri.var.accessToken" expression="$func:accessToken"/>-->
+      <property name="uri.var.sabre.clientId" expression="$func:clientId"/>
+      <property name="uri.var.sabre.clientSecret" expression="$func:clientSecret"/>
+      <property name="uri.var.apiUrl" expression="$func:apiUrl" />
+      <property name="uri.var.apiVersion" expression="$func:apiVersion" />
+	<log level="cutom">
+        <property name="---------------------------------" expression="$func:apiVersion" />
+	</log>
+	<header name="Authorization"
+		expression="fn:concat('Basic ',base64Encode(fn:concat(base64Encode($ctx:uri.var.sabre.clientId), ':', base64Encode($ctx:uri.var.sabre.clientSecret))))"
+		scope="transport"/>
+            
+	<payloadFactory media-type="json">
+		<format>
+		  {
+		  "grant_type":"client_credentials"
+		  }
+		</format>
+		<args/>
+	</payloadFactory>
+        
+	<property name="messageType" value="application/x-www-form-urlencoded" scope="axis2"/>
+	<call>
+		<endpoint>
+			<http method="post" uri-template="https://api.test.sabre.com/v2/auth/token"/>
+		</endpoint>
+	</call>
+	<filter source="$axis2:HTTP_SC" regex="[2][0][0]">
+		<then>
+			<property name="accessToken" expression="json-eval($.access_token)"/>
+			<header name="Authorization" expression="fn:concat('Bearer ',get-property('accessToken'))"
+				scope="transport"/>
+
+		</then>
+	</filter>
+	
+	<header name="Access-Control-Allow-Credentials" scope="transport" action="remove"/>
+	<header name="Server" scope="transport" action="remove"/>
+	<header name="Access-Control-Allow-Origin" scope="transport" action="remove"/>
+	<header name="grant_type" scope="transport" action="remove"/>
+	<header name="proxy-client-data" scope="transport" action="remove"/>
+	<header name="content-encoding" scope="transport" action="remove"/>
+
+   </sequence>
+</template>
